@@ -85,8 +85,16 @@ object NotarizedRoute {
         }
         ?: it
     }
-    .replace(Regex("/\\(.+\\)"), "")
-    .replace(Regex("/\\[.+\\]"), "")
+    .let { path ->
+      val hasMethodInfo = path.contains("(method:") //Ktor type safe routing feature routes has trailing (method:[DELETE,GET etc.]) metadata
+      val parentHasTrailingSlash = parent?.toString().orEmpty().endsWith("/")
+      val suffix = "/".takeIf { parentHasTrailingSlash && hasMethodInfo }.orEmpty()
+      val calculatedPath = "$path$suffix"
+      calculatedPath
+        .replace(Regex("/\\(.+?\\)"), "")
+        .replace(Regex("/\\[.+\\]"), "")
+    }
+
 
   fun Route.collectAuthMethods() = toString()
     .split("/")
